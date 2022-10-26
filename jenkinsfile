@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('preparation') {
+            steps {
+                git 'https://github.com/MahmoudAbelaziz22/jenkins_nodejs_example.git'
+            }
+        }
+        stage('build') {
+            steps {
+                sh 'docker build -f dockerfile . -t mahmoudabdelaziz22/node_example'
+            }
+        }
+        stage('artifact') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'user', passwordVariable: 'pass')]) {
+                sh 'docker logout'
+                sh 'docker login -u ${user} -p ${pass}'
+                sh 'docker push mahmoudabdelaziz22/node_example'
+                    
+                }
+            }
+        }
+        stage('deploy') {
+            steps {
+                sh 'docker run -d -p 3000:3000 mahmoudabdelaziz22/node_example'
+                    
+            }
+        }
+    }
+}
